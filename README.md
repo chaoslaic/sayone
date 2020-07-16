@@ -11,13 +11,13 @@
 - [简单说一下MySQL][mysql]
 - [简单说一下网络][network]
 
-[concurrent]:https://github.com/chaoslaic/sayone/blob/master/base/concurrent.md
-[docker]:https://github.com/chaoslaic/sayone/blob/master/base/docker.md
-[encryption]:https://github.com/chaoslaic/sayone/blob/master/base/encryption.md
-[io]:https://github.com/chaoslaic/sayone/blob/master/base/io.md
-[java]:https://github.com/chaoslaic/sayone/blob/master/base/java.md
-[jvm]:https://github.com/chaoslaic/sayone/blob/master/base/jvm.md
-[linux]:https://github.com/chaoslaic/sayone/blob/master/base/linux.md
-[middleware]:https://github.com/chaoslaic/sayone/blob/master/base/middleware.md
-[mysql]:https://github.com/chaoslaic/sayone/blob/master/base/mysql.md
-[network]:https://github.com/chaoslaic/sayone/blob/master/base/network.md
+[concurrent]:https://github.com/chaoslaic/sayone/blob/master/cs/concurrent.md
+[docker]:https://github.com/chaoslaic/sayone/blob/master/cs/docker.md
+[encryption]:https://github.com/chaoslaic/sayone/blob/master/cs/encryption.md
+[io]:https://github.com/chaoslaic/sayone/blob/master/cs/io.md
+[java]:https://github.com/chaoslaic/sayone/blob/master/cs/java.md
+[jvm]:https://github.com/chaoslaic/sayone/blob/master/cs/jvm.md
+[linux]:https://github.com/chaoslaic/sayone/blob/master/cs/linux.md
+[middleware]:https://github.com/chaoslaic/sayone/blob/master/cs/middleware.md
+[mysql]:https://github.com/chaoslaic/sayone/blob/master/cs/mysql.md
+[network]:https://github.com/chaoslaic/sayone/blob/master/cs/network.md
