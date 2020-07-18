@@ -29,9 +29,9 @@
 
 ### 文件句柄（文件描述符）
 
-- shell级限制：ulimit -n，当前shell的当前用户所有进程能打开的最大文件数量，默认1024。
-- 用户级限制：/etc/security/limits.conf，用户能打开的最大文件数量，不管它开启多少个shell。
-- 系统级限制：/proc/sys/fs/file-max，系统给出的建议值。
+- shell级限制：默认1024，ulimit -n，当前shell的当前用户所有进程能打开的最大文件数量。
+- 用户级限制：默认65535，/etc/security/limits.conf，用户能打开的最大文件数量，不管它开启多少个shell。
+- 系统级限制：默认794168，/proc/sys/fs/file-max，系统给出的建议值。
 
 ### IO读写原理
 
@@ -90,9 +90,9 @@ DMA的全称叫直接存储器访问（Direct Memory Access），是一种允许
 
 IO多路复用是指内核一旦发现进程指定的一个或者多个IO条件准备读取，它就通知该进程。
 
-- select，1024线程且非线程安全。
-- poll，非线程安全。
-- epoll。
+- select：1024线程限制且非线程安全。
+- poll：无线程限制，但非线程安全。
+- epoll：无线程限制，线程安全。
 
 - channel表示网络连接。
 - selector监视多个文件描述符。
@@ -145,7 +145,7 @@ IO多路复用是指内核一旦发现进程指定的一个或者多个IO条件�
 
 基于mmap + write系统调用的零拷贝方式，整个拷贝过程会发生4次上下文切换，1次CPU拷贝和2次DMA拷贝，用户程序读写数据的流程如下：
 
-- 用户进程通过()函数向内核（kernel）发起系统调用，上下文从用户态（user space）切换为内核态（kernel space）。
+- 用户进程通过mmap()函数向内核（kernel）发起系统调用，上下文从用户态（user space）切换为内核态（kernel space）。
 - 将用户进程的内核空间的读缓冲区（read buffer）与用户空间的缓存区（user buffer）进行内存地址映射。
 - CPU利用DMA控制器将数据从主存或硬盘拷贝到内核空间（kernel space）的读缓冲区（read buffer）。
 - 上下文从内核态（kernel space）切换回用户态（user space），mmap系统调用执行返回。
