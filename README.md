@@ -1,5 +1,7 @@
 # 目录
 
+## 计算机
+
 - [简单说一下并发][concurrent]
 - [简单说一下容器][docker]
 - [简单说一下加解密][encryption]
@@ -11,6 +13,10 @@
 - [简单说一下MySQL][mysql]
 - [简单说一下网络][network]
 
+## 支付
+
+- [简单说一下支付术语][term]
+
 [concurrent]:https://github.com/chaoslaic/sayone/blob/master/cs/concurrent.md
 [docker]:https://github.com/chaoslaic/sayone/blob/master/cs/docker.md
 [encryption]:https://github.com/chaoslaic/sayone/blob/master/cs/encryption.md
@@ -21,3 +27,4 @@
 [middleware]:https://github.com/chaoslaic/sayone/blob/master/cs/middleware.md
 [mysql]:https://github.com/chaoslaic/sayone/blob/master/cs/mysql.md
 [network]:https://github.com/chaoslaic/sayone/blob/master/cs/network.md
+[term]:https://github.com/chaoslaic/sayone/blob/master/payment/term.md
