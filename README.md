@@ -15,7 +15,7 @@
 
 ## 支付
 
-- [简单说一说支付历史][history]
+- [简单说一下支付历史][history]
 - [简单说一下支付术语][term]
 
 [concurrent]:https://github.com/chaoslaic/sayone/blob/master/cs/concurrent.md
