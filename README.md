@@ -15,6 +15,7 @@
 
 ## 支付
 
+- [简单说一说支付历史][history]
 - [简单说一下支付术语][term]
 
 [concurrent]:https://github.com/chaoslaic/sayone/blob/master/cs/concurrent.md
@@ -27,4 +28,5 @@
 [middleware]:https://github.com/chaoslaic/sayone/blob/master/cs/middleware.md
 [mysql]:https://github.com/chaoslaic/sayone/blob/master/cs/mysql.md
 [network]:https://github.com/chaoslaic/sayone/blob/master/cs/network.md
+[history]:https://github.com/chaoslaic/sayone/blob/master/payment/history.md
 [term]:https://github.com/chaoslaic/sayone/blob/master/payment/term.md
