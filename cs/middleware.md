@@ -1,6 +1,6 @@
 # 简单说一下中间件
 
-Java框架或多或少用到了Java高级特性，如下。
+Java框架或多或少用到了Java高级特性，如下：
 
 - Jackson：利用反射、注解，实现通用的序列化机制。用注解定制输出字段的名称、格式，利用反射获取注解信息输出序列化。
 - Spring MVC、Jersey：利用反射、注解，实现序列化处理Web通信内容。
@@ -10,21 +10,13 @@ Java框架或多或少用到了Java高级特性，如下。
 - JSP：利用类加载器，实现修改代码不用重启即可生效。起一个后台线程定时重复加载类。
 - Spring、Guice：利用反射、注解、动态代理、类加载器，实现对象管理容器。
 
-## Java 9 Module
-
-每个模块使用自定义ClassLoader实现动态更新。
-
-## OSGI
-
-Open Service Gateway Initiative，每个模块使用自定义ClassLoader实现动态更新。
-
 ## Lombok
 
-通过JSR 269的api，在编译期间的Annotation Process阶段根据不同的Lombok注解调用不同的Handler修改了抽象语法树，达到增强字节码的效果。
+通过JSR 269的api，在编译期间的Annotation Process阶段，根据不同的Lombok注解调用不同的Handler修改了抽象语法树，达到增强字节码的效果。
 
 ## JDBC
 
-Java Database Connectivity是Java语言中提供的访问关系型数据的接口。javax.sql包添加了数据源扩展（DataSource）、连接池、ResultSet扩展、分布式扩展。
+Java Database Connectivity是Java语言中提供的访问关系型数据的接口。javax.sql包添加了数据源扩展、连接池、ResultSet扩展、分布式扩展。
 
 - 建立数据源连接：在JDBC 1.0规范中使用DriverManager，在JDBC 2.0规范中使用DataSource。
 - 执行SQL语句：通过Statement接口执行查询和更新操作。
@@ -33,19 +25,19 @@ Java Database Connectivity是Java语言中提供的访问关系型数据的接�
 
 ```java
 try {
-    // 建立数据源连接 1
-    Class.forName("org.hsqldb.jdbcDriver");
-    Connection connection = DriverManager.getConnection("jdbc:hsqldb:mem:mybatis"，"sa"，"");
-
-    /** 建立数据源连接 2
-     *  DataSourceFactory dsf = new UnpooledDataSourceFactory();
-     *  Properties properties = new Properties();
-     *  InputStream configStream = Thread.currentThread().getContextClassLoader().getResourceAsStream("database.properties");
-     *  properties.load(configStream());
-     *  dsf.setProperties(properties);
-     *  DataSource dataSource = dsf.getDataSource();
-     *  Connection connection = dataSource.getConnection();
+    /** // 建立DriverManager数据源连接（Connection不能复用）
+     *  Class.forName("org.hsqldb.jdbcDriver");
+     *  Connection connection = DriverManager.getConnection("jdbc:hsqldb:mem:mybatis"，"sa"，"");
      */
+
+    // 建立DataSource数据源连接（Connection可复用）
+    DataSourceFactory dsf = new UnpooledDataSourceFactory();
+    Properties properties = new Properties();
+    InputStream configStream = Thread.currentThread().getContextClassLoader().getResourceAsStream("database.properties");
+    properties.load(configStream());
+    dsf.setProperties(properties);
+    DataSource dataSource = dsf.getDataSource();
+    Connection connection = dataSource.getConnection();
 
     // 执行SQL语句
     Statement statement = connection.createStatement();
@@ -71,8 +63,6 @@ try {
 
 ## MyBatis
 
-### MyBatis简介
-
 MyBatis是一款在持久层使用的SQL映射框架，可以将SQL语句单独写在XML配置文件中，或者使用带有注解的Mapper映射类来完成数据库记录到Java实体的映射。属于半自动的ORM框架。
 
 - 消除了大量的JDBC冗余代码，包括参数设置、结果集封装等。
@@ -85,22 +75,20 @@ MyBatis是一款在持久层使用的SQL映射框架，可以将SQL语句单独�
 
 - Configuration：用于描述MyBatis主配置文件信息，MyBatis框架在启动时会加载主配置文件，将配置信息转换为Configuration对象。
 - SqlSession：面向用户的API，是MyBatis与数据库交互的接口。
-- Executor：SQL执行器，用于和数据库交。SqlSession可以理解为Executor组件的外观，真正执行SQL的是Executor组件。
+- Executor：SQL执行器，用于和数据库交互。SqlSession可以理解为Executor组件的外观，真正执行SQL的是Executor组件。
 - MappedStatement：用于描述SQL配置信息，MyBatis框架启动时，XML文件或注解配置的SQL信息会被转换为MappedStatement对象注册到Configuration组件中。
 - StatementHandler：封装了对JDBC中Statement对象的操作，包括为Statement参数占位符设置值，通过Statement对象执行SQL语句。
 - TypeHandler：类型处理器，用于Java类型与JDBC类型之间的转换。
-- ParameterHandler：用于处理SQL中的参数占位符，为参数占位符设置值。
+- ParameterHandler：用于处理SQL中的参数占位符，为参数占位符设置值。#字段赋值，$可自定义控制。
 - ResultSetHandler：封装了对ResultSet对象的处理逻辑，将结果集转换为Java实体对象。
 
 ## HikariCP
 
+数据库连接池。
+
 - 精简字节码：代码量少，只有130Kb，使用Javassist生成动态代理类进行字节码精简。
 - FastList：只实现必要的接口，去掉越界检查，删除从尾部扫描。
 - ConcurrentBag：无锁设计，ThreadLocal缓存，队列窃取，直接切换。
-
-## Tomcat
-
-每个Web应用使用自己的ClassLoader。
 
 ## Spring
 
@@ -163,10 +151,10 @@ MyBatis是一款在持久层使用的SQL映射框架，可以将SQL语句单独�
 
 ### 核心注解
 
-启动类上面的注解是@SpringBootApplication，它也是 Spring Boot 的核心注解，主要组合包含了以下 3 个注解：
+启动类上面的注解是@SpringBootApplication，它也是Spring Boot的核心注解，主要组合包含了以下3个注解：
 
-- @SpringBootConfiguration：组合了 @Configuration 注解，实现配置文件的功能。
-- @EnableAutoConfiguration：打开自动配置的功能，也可以关闭某个自动配置的选项，如关闭数据源自动配置功能： @SpringBootApplication(exclude = { DataSourceAutoConfiguration.class })。
+- @SpringBootConfiguration：组合了@Configuration注解，实现配置文件的功能。
+- @EnableAutoConfiguration：打开自动配置的功能，也可以关闭某个自动配置的选项，如关闭数据源自动配置功能：@SpringBootApplication(exclude = { DataSourceAutoConfiguration.class })。
 - @ComponentScan：Spring组件扫描。
 
 ### 自动配置
@@ -175,15 +163,15 @@ spring程序main方法中添加@EnableAutoConfiguration，会自动去maven中�
 
 ### starters
 
-Starters可以理解为启动器，它包含了一系列可以集成到应用里面的依赖包，你可以一站式集成 Spring 及其他技术，而不需要到处找示例代码和依赖包。如你想使用 Spring JPA 访问数据库，只要加入 spring-boot-starter-data-jpa 启动器依赖就能使用了。
+Starters可以理解为启动器，它包含了一系列可以集成到应用里面的依赖包，你可以一站式集成Spring及其他技术，而不需要到处找示例代码和依赖包。如你想使用Spring JPA访问数据库，只要加入spring-boot-starter-data-jpa启动器依赖就能使用了。
 
 ## Spring Cloud
 
-- 服务发现：Eureka
-- 协议调用：Feign
-- 负载均衡：Zuul
-- 集群容错：Hystrix断路器
-- 分布式跟踪：Sleuth日志跟踪
+- 服务发现：Eureka。
+- 协议调用：Feign。
+- 负载均衡：Zuul。
+- 集群容错：Hystrix断路器。
+- 分布式跟踪：Sleuth日志跟踪。
 
 ## SPI
 
@@ -335,12 +323,6 @@ Broker每隔30s向NameService上报心跳包。NameService每隔10s扫描心跳�
 - 通讯协议：采用什么样的通讯协议，是HTTP还是内部私有协议，协议的选择不同，性能模型也不同。
 - 线程模型：涉及如何读取数据包，读取之后的编解码在哪个线程中进行，编解码后的消息如何派发等方面。
 
-### Netty零拷贝
-
-- ByteBuffer采用DirectBuffer，使用堆外直接内存进行Socket读写，不需要进行字节缓冲区的二次拷贝。
-- 提供了组合Buffer对象，可以聚合多个ByteBuffer，组合的时候不需要通过内存拷贝。
-- 文件传输采用了transferTo方法，直接将文件缓冲区的数据发送到目标Channel。
-
 ### Reactor线程模型
 
 - Reactor单线程模型：Acceptor负责接收客户端的TCP连接请求信息，链路建立成功之后，通过Dispatch将对应的ByteBuffer派发到指定的Handler上进行消息解码，用户Handler通过NIO线程将消息发送给客户端。
@@ -349,12 +331,12 @@ Broker每隔30s向NameService上报心跳包。NameService每隔10s扫描心跳�
 
 ### Netty组件
 
-- Bootstrap：启动配置
-- EventLoop：事件循环
-- Pipeline：管道
-- Future、Promise：异步处理
-- ByteBuf：内存分配
-- 编解码
+- Bootstrap：启动配置。
+- EventLoop：事件循环。
+- Pipeline：管道。
+- Future、Promise：异步处理。
+- ByteBuf：内存分配。
+- 编解码。
 
 ```java
 EventLoopGroup group = new NioEventLoopGroup();
@@ -371,43 +353,43 @@ channelFuture.channel().closeFuture().sync();
 
 ## ElasticJob
 
-注册中心为zk
+注册中心为zk。
 
-作业服务a -> 发起主节点选举 -> 设置分片标记 -> 注册作业全局信息 -> 注册服务器a信息 -> 等待作业运行
+作业服务a -> 发起主节点选举 -> 设置分片标记 -> 注册作业全局信息 -> 注册服务器a信息 -> 等待作业运行。
 
 ## Redis
 
 ### 优势
 
-- 内存存储数据库
-- 单进程线程的服务，单线程处理网络请求，IO多路复用模型
-- 良好的数据类型
+- 内存存储数据库。
+- 单进程线程的服务，单线程处理网络请求，IO多路复用模型。
+- 良好的数据类型。
 
 ### 五种数据类型
 
-- string：intset、sds
-- list：quicklist
-- hash：ziplist、dict
-- set：intset、dict
-- zset：查找用dict，范围用ziplist
+- string：intset、sds。
+- list：quicklist。
+- hash：ziplist、dict。
+- set：intset、dict。
+- zset：查找用dict，范围用ziplist。
 
 ### 多种数据结构
 
-- sds：简单动态字符串，二进制安全，五种结构分别存储长度5、8、16、32、64
-- skiplist：跳跃表，有序集合，实现比红黑树简单
-- ziplist：压缩链表，存储空间连续；元素少且长度少；元素多时修改元素需重新调整空间
-- adlist：双向链表，不满足ziplist的元素少且长度少的链表
-- quicklist：快速链表，组合ziplist和adlist、综合考虑时间效率和空间效率
-- dict：字典，散列表；两个hash表，用来进行扩表
-- intset：整数集合，有序存储整型
+- sds：简单动态字符串，二进制安全，五种结构分别存储长度5、8、16、32、64。
+- skiplist：跳跃表，有序集合，实现比红黑树简单。
+- ziplist：压缩链表，存储空间连续；元素少且长度少；元素多时修改元素需重新调整空间。
+- adlist：双向链表，不满足ziplist的元素少且长度少的链表。
+- quicklist：快速链表，组合ziplist和adlist、综合考虑时间效率和空间效率。
+- dict：字典，散列表；两个hash表，用来进行扩表。
+- intset：整数集合，有序存储整型。
 
 ### 主从复制
 
-主节点持久化后返回调用方，再进行从节点复制，会导致分布式锁出问题，解决方案自己实现一个raft协议。
+主节点持久化后返回调用方，再进行从节点复制，会导致分布式锁出问题，解决方案自己实现一个paxos协议。
 
 复制的流程：
 
-- slave node启动，仅仅保存master node的信息，包括master node的host和ip，但是复制流程没开始。
+- slave node启动，仅仅保存master node的信息，包括master node的host和ip，但是复制流程还没开始。
 - slave node内部有个定时任务，每秒检查是否有新的master node要连接和复制，如果发现，就跟master node建立socket网络连接。
 - slave node发送ping命令到master node。
 - 口令认证，如果master node设置了requirepass，那么slave node必须发送masterauth的口令过去进行认证。
@@ -424,26 +406,26 @@ aof：服务器端执行的每一条命令。
 
 ### 哨兵和集群
 
-- 哨兵：高可用，master故障时自动选择一个slave切换为master
-- 集群：数据冗余自动分片到不同节点
+- 哨兵：高可用，master故障时自动选择一个slave切换为master。
+- 集群：数据冗余自动分片到不同节点。
 
 ### Pipelining
 
-- 发送一批命令通过行位符分隔
-- 同一个消息里发送一批命令
-- 看起来是原子性
-- 但管道与管道里的命令并非有序
+- 发送一批命令通过行位符分隔。
+- 同一个消息里发送一批命令。
+- 看起来是原子性。
+- 但管道与管道里的命令并非有序。
 
 ### Transactions
 
-- 事务与事务直接是有序的
-- 报错不会回滚
-- 原子性
-- 但命令结果不能作为参数
+- 事务与事务直接是有序的。
+- 报错不会回滚。
+- 原子性。
+- 但命令结果不能作为参数。
 
 ### redis lua
 
-命令结果可以作为参数
+命令结果可以作为参数。
 
 ```sql
 EVAL script numkeys key [key ...] arg [arg ...]
@@ -459,38 +441,36 @@ EVALSHA sha1 numkeys key [key ...] arg [arg ...]
 
 ```
 
-限流使用滑动窗口实现
+限流使用滑动窗口实现。
 
 #### 基于寄存器的Lua虚拟机
 
-- 存储操作数的结构基于CPU的寄存器
-- 没有PUSH或POP操作，但是指令需要包含操作数的地址（寄存器）
-- 也就是说，指令的操作数是在指令中显式寻址的，这与基于堆栈的模型不同，我们有一个指向操作数的堆栈指针
+- 存储操作数的结构基于CPU的寄存器。
+- 没有PUSH或POP操作，但是指令需要包含操作数的地址（寄存器）。
+- 也就是说，指令的操作数是在指令中显式寻址的，这与基于堆栈的模型不同，我们有一个指向操作数的堆栈指针。
 
 ## ZooKeeper
 
 ### paxos协议
 
-论文
+论文。
 
 ### zab协议
 
-ZooKeeper依据paxos协议所实现
+ZooKeeper依据paxos协议所实现。
 
 ### raft协议
 
-etcd依据paxos协议所实现
+etcd依据paxos协议所实现。
 
-Leader、Follower、Condidate
-
-选举过程：所有成员参与选举，变为候选者进行拉票，最高者成为领导。若候选者票数一致则随机休眠再次选举。领导向成员发心跳，成员未收到会再次选举。
+选举过程：所有成员（Follower）参与选举，变为候选者（Condidate）进行拉票，最高者成为领导（Leader）。若候选者票数一致则随机休眠再次选举。领导向成员发心跳，成员未收到会再次选举。
 
 一致性策略：客户端数据达到领导，领导收到数据标为未提交，向成员复制数据，获得一半成员的响应将数据标为已提交，返回给客户端。
 
 领导者异常：
 
-- 领导接收数据前挂了：内部重选举，客户端幂等重试
-- 领导接受到数据标为未提交时挂了：内部重选举，挂掉的领导成为成员，丢弃掉未提交的数据，客户端幂等重试
-- 领导接受到数据标为未提交且向成员复制数据后挂了，拥有最新数据的成员成为领导，并向其他成员复制，数据最新，客户端幂等提交
-- 领导标记为已提交后挂了：同上，客户端幂等提交
-- 脑裂问题：3个节点在a组，两个节点在b组，此时ab组分离，a组的领导发现响应不超过一半成员，写入失败，b组产生领导，客户端向b领导写入成功
+- 领导接收数据前挂了：内部重选举，客户端幂等重试。
+- 领导接受到数据标为未提交时挂了：内部重选举，挂掉的领导成为成员，丢弃掉未提交的数据，客户端幂等重试。
+- 领导接受到数据标为未提交且向成员复制数据后挂了：拥有最新数据的成员成为领导，并向其他成员复制，客户端幂等提交。
+- 领导标记为已提交后挂了：拥有最新数据的成员成为领导，并向其他成员复制，客户端幂等提交。
+- 脑裂问题：3个节点在a组，两个节点在b组，此时ab组分离，a组的领导发现响应不超过一半成员，写入失败，b组产生领导，客户端向b领导写入成功。
