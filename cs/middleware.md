@@ -14,9 +14,25 @@ Java框架或多或少用到了Java高级特性，如下：
 
 通过JSR 269的api，在编译期间的Annotation Process阶段，根据不同的Lombok注解调用不同的Handler修改了抽象语法树，达到增强字节码的效果。
 
+## SPI
+
+SPI（Service Provider Interface，服务提供者接口）是面向接口编程，服务规则提供者在JRE的核心API里定义服务访问接口，具体实现由其他开发商提供。
+
+### SPI原理
+
+Java核心API（如rt.jar）是由BootstrapClassLoader加载，用户提供的Jar包是由AppClassLoader加载，如果一个类由类加载器加载，那么其依赖的类也由相同的类加器加载。
+
+用来搜索开发商提供的spi扩展实现类的API类（ServiceLoader）使用ContextClassLoader加载。
+
+ContextClassLoader会获取当前线程上下文类加载器，也就是会获取到AppClassLoader。
+
+### 数据库驱动接口示例
+
+比如服务规则提供者在rt.jar包里定义了数据库的驱动接口java.sql.Driver，那么MySQL开发商会在驱动包的MEATA-INF/services/下建立java.sql.Driver的文件，文件内容是驱动接口的实现类。
+
 ## JDBC
 
-Java Database Connectivity是Java语言中提供的访问关系型数据的接口。javax.sql包添加了数据源扩展、连接池、ResultSet扩展、分布式扩展。
+Java Database Connectivity是Java语言中提供的访问关系型数据库的接口。javax.sql包添加了数据源扩展、连接池扩展、ResultSet扩展、分布式扩展。
 
 - 建立数据源连接：在JDBC 1.0规范中使用DriverManager，在JDBC 2.0规范中使用DataSource。
 - 执行SQL语句：通过Statement接口执行查询和更新操作。
@@ -119,7 +135,7 @@ MyBatis是一款在持久层使用的SQL映射框架，可以将SQL语句单独�
 
 - 对所有Bean的配置信息进行解析，将Bean的配置信息转换为BeanDefinition对象，并注册到BeanDefinitionRegistry容器中。
 - 从BeanDefinitionRegistry容器中获取实现了BeanFactoryPostProcessor接口的Bean定义，然后实例化Bean，调用postProcessBeanFactory()方法，可对Bean工厂的信息进行修改。
-- 根据BeanDefinitionRegister容器中的BeanDefinition对象实例化所有的单例Bean，并对Bean的属性进行填充。
+- 根据BeanDefinitionRegistry容器中的BeanDefinition对象实例化所有的单例Bean，并对Bean的属性进行填充。
 - 执行所有实现了BeanPostProcessor接口的Bean的postProcessBeforeInitialization()方法，可对原始的Bean进行包装。
 - 执行Bean的初始化方法，初始化方法包括配置Bean的init-method方法，实现InitializingBean接口重写的afterPropertiesSet()方法。
 - 执行所有实现了BeanPostProcessor接口的Bean的postProcessAfterInitialization()方法。
@@ -163,7 +179,7 @@ spring程序main方法中添加@EnableAutoConfiguration，会自动去maven中�
 
 ### starters
 
-Starters可以理解为启动器，它包含了一系列可以集成到应用里面的依赖包，你可以一站式集成Spring及其他技术，而不需要到处找示例代码和依赖包。如你想使用Spring JPA访问数据库，只要加入spring-boot-starter-data-jpa启动器依赖就能使用了。
+starters可以理解为启动器，它包含了一系列可以集成到应用里面的依赖包，可以一站式集成Spring及其他技术，而不需要到处找示例代码和依赖包。如想使用Spring JPA访问数据库，只要加入spring-boot-starter-data-jpa启动器依赖就能使用了。
 
 ## Spring Cloud
 
@@ -172,22 +188,6 @@ Starters可以理解为启动器，它包含了一系列可以集成到应用里
 - 负载均衡：Zuul。
 - 集群容错：Hystrix断路器。
 - 分布式跟踪：Sleuth日志跟踪。
-
-## SPI
-
-SPI（Service Provider Interface，服务提供者接口）是面向接口编程，服务规则提供者在JRE的核心API里定义服务访问接口，具体实现由其他开发商提供。
-
-### SPI原理
-
-Java核心API（如rt.jar）是由BootStrapClassLoader加载，用户提供的Jar包是由AppClassLoader加载，如果一个类由类加载器加载，那么其依赖的类也由相同的类加器加载。
-
-用来搜索开发商提供的spi扩展实现类的API类（ServiceLoader）使用ContextClassLoader加载。
-
-ContextClassLoader会获取当前线程上下文加载器，也就是会获取到AppClassLoader。
-
-### 数据库驱动接口示例
-
-比如规范制定者在rt.jar包里定义了数据库的驱动接口java.sql.Driver，那么MySQL开发商会在驱动包的MEATA-INF/services/下建立java.sql.Driver的文件，文件内容是驱动接口的实现类。
 
 ## Dubbo
 
@@ -214,13 +214,12 @@ Dubbo的扩展点加载机制基于SPI而来的，解决了SPI的以下问题：
 
 ### 分层架构
 
-- Service和Config：为api接口层，服务提供者用ServiceConfig发布服务，服务消费者用ReferenceConfig进行代理消费。
-- 其他各层为SPI层：服务提供者接口是组件化，可替换的。
+- Service和Config：为api接口层，服务提供者用ServiceConfig发布服务，服务消费者用ReferenceConfig进行代理消费。其他各层为SPI层：服务提供者接口是组件化、可替换的。
 - Proxy：服务代理层，JavassistProxyFactory、JdkProxyFactory。
 - Register：服务注册中心层，ZooKeeperRegister、RedisRegister、MulticastRegister、DubboRegister。
 - Cluster：路由层，负载均衡有随机、轮询、最小活跃数、一致性hash，集群容错有失败重试、快速失败、失败安全、失败自动恢复、并行调用。
 - Monitor：监控层。
-- Protocol：远程调用协议层，RegisterProtocol、DubboProtocol、InjvmProtocol。
+- Protocol：远程调用层，RegisterProtocol、DubboProtocol、InjvmProtocol。
 - Exchange：信息交换层，封装请求响应模式，同步转异步。
 - Transport：网络传输层，抽象为统一接口，NettyTransporter、MinaTransporter。
 - Serialize：数据序列化层，DubboSerialization、FastJsonSerialization、Hessian2Serialization、JavaSerialization。
@@ -251,9 +250,14 @@ boss线程池接受客户端的链接请求，并把完成TPC三次握手的连�
 - 失败自动恢复：当服务消费方调用服务出现异常后，在后台记录失败的请求，并按照一定的策略后期再进行重试。用于消息通知操作。
 - 并行调用：当服务消费方调用一个接口方法后，会并行调用多个服务提供者的服务，只要其中一个成功即返回。用于实时性要求较高的读操作，需要浪费更多服务资源。
 
-## RocketMQ
+### 协议的比较
 
-### 架构
+- dubbo协议：为dubbo默认的协议，消费者比提供者多，小数据，默认hessian2序列化。
+- dubbo协议：提供者比消费者多，大数据，默认hessian序列化。
+- rmi协议：默认java原生序列化。
+- http协议：默认json序列化。
+
+## RocketMQ
 
 - producer：消息生产者，发送消息到消息服务器。
 - broker：消息服务器，消息持久化存储，根据订阅推送push到消息消费者。
@@ -383,32 +387,6 @@ channelFuture.channel().closeFuture().sync();
 - dict：字典，散列表；两个hash表，用来进行扩表。
 - intset：整数集合，有序存储整型。
 
-### 主从复制
-
-主节点持久化后返回调用方，再进行从节点复制，会导致分布式锁出问题，解决方案自己实现一个paxos协议。
-
-复制的流程：
-
-- slave node启动，仅仅保存master node的信息，包括master node的host和ip，但是复制流程还没开始。
-- slave node内部有个定时任务，每秒检查是否有新的master node要连接和复制，如果发现，就跟master node建立socket网络连接。
-- slave node发送ping命令到master node。
-- 口令认证，如果master node设置了requirepass，那么slave node必须发送masterauth的口令过去进行认证。
-- master node第一次执行全量复制（rdb文件），将所有数据发送给slave node。
-- master node后续持续将写命令，同步复制（aof文件）给slave node。
-
-复制的核心：
-
-- master和slave都维护一个offset master会不断累加自身的offset，slave也会自身不断累加offset，slave每秒都会上报自己的offset给master，同时master也会记录每个slave的offset。
-- backlog master node有一个backlog，默认是1MB大小；master node给slave node复制数据时，也会将数据在backlog中同步写一份。
-
-rdb：保存某一个时间点之前的数据。
-aof：服务器端执行的每一条命令。
-
-### 哨兵和集群
-
-- 哨兵：高可用，master故障时自动选择一个slave切换为master。
-- 集群：数据冗余自动分片到不同节点。
-
 ### Pipelining
 
 - 发送一批命令通过行位符分隔。
@@ -449,6 +427,59 @@ EVALSHA sha1 numkeys key [key ...] arg [arg ...]
 - 没有PUSH或POP操作，但是指令需要包含操作数的地址（寄存器）。
 - 也就是说，指令的操作数是在指令中显式寻址的，这与基于堆栈的模型不同，我们有一个指向操作数的堆栈指针。
 
+### redis分布式锁
+
+#### redis分布式锁的基本实现
+
+```java
+SETNX my_key my_value PX 30000
+```
+
+- SETNX命令的作用是在只有key不存在的时候才会设置value，超时时间设为30000毫秒。
+- value保持唯一是为了确保安全的释放锁，避免误删其他客户端得到的锁。例如一个客户端拿到了锁，到超时时间还未操作完成，自动释放了这个锁，客户端操作完成之后，又尝试删除这个其实已经被其他客户端拿到的锁。
+
+#### 超时的锁问题
+
+如果在加锁和释放锁之间的逻辑执行得太长，以至于超出了锁的超时限制，就会出现问题。
+
+启动守护线程去检查问题，当锁超时时间快到期且逻辑未执行完，延长锁超时时间。
+
+#### 单点故障的锁问题
+
+主节点持久化后返回调用方，再进行从节点复制，会导致分布式锁出问题，可用RedLock解决（客户端实现类似paxos协议，可用ZooKeeper分布式锁）。
+
+使用N个完全独立、没有主从关系的Redis master节点以保证他们大多数情况下都不会同时宕机，N一般为奇数。一个客户端需要做如下操作来获取锁：
+
+- 获取当前时间（单位是毫秒）。
+- 轮流用相同的key和随机值在N个节点上请求锁，在这一步里，客户端在每个master上请求锁时，会有一个和总的锁释放时间相比小的多的超时时间。比如如果锁自动释放时间是10秒钟，那每个节点锁请求的超时时间可能是5-50毫秒的范围，这个可以防止一个客户端在某个宕掉的master节点上阻塞过长时间，如果一个master节点不可用了，我们应该尽快尝试下一个master节点。
+- 客户端计算第二步中获取锁所花的时间，只有当客户端在大多数master节点上成功获取了锁（(N/2)+1），而且总共消耗的时间不超过锁释放时间，这个锁就认为是获取成功了。
+- 如果锁获取成功了，那现在锁自动释放时间就是最初的锁释放时间减去之前获取锁所消耗的时间。
+- 如果锁获取失败了，不管是因为获取成功的锁不超过一半（N/2+1)还是因为总消耗时间超过了锁释放时间，客户端都会到每个master节点上释放锁，即便是那些他认为没有获取成功的锁。
+
+### 主从复制
+
+复制的流程：
+
+- slave node启动，仅仅保存master node的信息，包括master node的host和ip，但是复制流程还没开始。
+- slave node内部有个定时任务，每秒检查是否有新的master node要连接和复制，如果发现，就跟master node建立socket网络连接。
+- slave node发送ping命令到master node。
+- 口令认证，如果master node设置了requirepass，那么slave node必须发送masterauth的口令过去进行认证。
+- master node第一次执行全量复制（rdb文件），将所有数据发送给slave node。
+- master node后续持续将写命令，同步复制（aof文件）给slave node。
+
+复制的核心：
+
+- master和slave都维护一个offset master会不断累加自身的offset，slave也会自身不断累加offset，slave每秒都会上报自己的offset给master，同时master也会记录每个slave的offset。
+- backlog master node有一个backlog，默认是1MB大小；master node给slave node复制数据时，也会将数据在backlog中同步写一份。
+
+rdb：保存某一个时间点之前的数据。
+aof：服务器端执行的每一条命令。
+
+### 哨兵和集群
+
+- 哨兵：高可用，master故障时自动选择一个slave切换为master。
+- 集群：数据冗余自动分片到不同节点。
+
 ## ZooKeeper
 
 ### paxos协议
@@ -465,12 +496,12 @@ etcd依据paxos协议所实现。
 
 选举过程：所有成员（Follower）参与选举，变为候选者（Condidate）进行拉票，最高者成为领导（Leader）。若候选者票数一致则随机休眠再次选举。领导向成员发心跳，成员未收到会再次选举。
 
-一致性策略：客户端数据达到领导，领导收到数据标为未提交，向成员复制数据，获得一半成员的响应将数据标为已提交，返回给客户端。
+一致性策略：客户端数据到达领导，领导收到数据标为未提交，向成员复制数据，获得一半成员的响应将数据标为已提交，返回给客户端。
 
 领导者异常：
 
 - 领导接收数据前挂了：内部重选举，客户端幂等重试。
-- 领导接受到数据标为未提交时挂了：内部重选举，挂掉的领导成为成员，丢弃掉未提交的数据，客户端幂等重试。
-- 领导接受到数据标为未提交且向成员复制数据后挂了：拥有最新数据的成员成为领导，并向其他成员复制，客户端幂等提交。
+- 领导接收到数据标为未提交时挂了：内部重选举，挂掉的领导成为成员，丢弃掉未提交的数据，客户端幂等重试。
+- 领导接收到数据标为未提交且向成员复制数据后挂了：拥有最新数据的成员成为领导，并向其他成员复制，客户端幂等提交。
 - 领导标记为已提交后挂了：拥有最新数据的成员成为领导，并向其他成员复制，客户端幂等提交。
 - 脑裂问题：3个节点在a组，两个节点在b组，此时ab组分离，a组的领导发现响应不超过一半成员，写入失败，b组产生领导，客户端向b领导写入成功。
