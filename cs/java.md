@@ -13,12 +13,12 @@ Java主要分为基础知识和高级特性。
   - List：有序、可重复。
     - ArrayList：基于数组实现，增删慢，查找快，线程不安全。
     - LinkedList：基于双向链表实现，增删快，查找慢，线程不安全。
-    - Vector：过时，基于数组实现，增删慢，查找快，用synchronized实现线程安全。
     - CopyOnWriteArrayList：写时复制。
+    - Vector：过时，基于数组实现，增删慢，查找快，用synchronized实现线程安全。
     - Stack：过时，继承于Vector。
   - Queue：先进先出队列，尾部添加，头部查看或删除。
     - LinkedList：基于链表实现。
-    - ArrayDeque：基于循环数组实现，实现Deque接口。
+    - ArrayDeque：基于循环数组实现。
     - PriorityQueue：优先级队列，基于堆实现。
     - ArrayBlockingQueue：基于数组实现，有界阻塞队列。
     - PriorityBlockingQueue：支持优先级排序，无界阻塞队列。
@@ -54,9 +54,11 @@ Java主要分为基础知识和高级特性。
 
 ### Map
 
-利用hash值提高比较性能。hash值默认是对象内存地址的计算。
+利用hash值提高比较性能。hash值默认是对象内存地址的计算。若想比较两个对象是否相等，需同时覆盖对象的hashCode方法和equals方法，并且其方法的返回值相同。
 
-HashMap扩容的时候链表会倒置顺序，多线程会导致HashMap的Entry链表形成环形数据结构，一旦形成环形数据结构，Entry的next节点永远不为空，就会产生死循环获取Entry。
+HashMap扩容的时候链表会倒置顺序，多线程会导致HashMap的Entry链表形成环形数据结构，一旦形成环形数据结构，Entry的next节点永远不为空，就会产生死循环获取Entry。比如两个线程，一个线程先完成倒置，另一个线程就会死循环。
+
+ConcurrentHashMap，Java7每个段单独处理。Java8后来的线程会协助扩容。
 
 ### Collections
 
@@ -68,7 +70,7 @@ Collections以静态方法的方式提供了通用功能。
   - 添加和修改。
 - 返回一个容器接口对象。
   - 适配器：将其他类型的数据转换为容器接口对象。空容器方法、单一对象方法、转换适配方法。
-  - 装饰器：修饰一个给定容器接口对象，增加某种性质。写安全、类型安全、线程安全。
+  - 装饰器：修饰一个给定容器接口对象，增加某种性质。写安全、类型安全、线程安全（通过synchronized包装方法）。
 
 ## 文件
 
@@ -107,8 +109,8 @@ Collections以静态方法的方式提供了通用功能。
 - Throwable：分为Error、Exception。
 - Error：运行错误，系统出现Error将退出进程，常见的有ThreadDeath。
 - Exception：运行异常，异常处理机制可处理，分为RuntimeException、CheckedException。
-- RuntimeException：运行期间抛出的异常，常见的有NullPointerException、ClassCastException。
-- CheckedException：编译阶段强制捕获和处理此类异常，常见的有IOException、ClassNotFoundException。
+  - RuntimeException：运行期间抛出的异常，常见的有NullPointerException、ClassCastException。
+  - CheckedException：编译阶段强制捕获和处理此类异常，常见的有IOException、ClassNotFoundException。
 
 ### 处理方式
 
@@ -169,7 +171,3 @@ m.invoke(p2, "法外狂徒");
 - 适配器模式：接口不同而导致无法一起工作，新类会实现新的接口，并持有旧类和旧接口。
 - 装饰器模式：新类会实现旧接口并持有旧对象，新类中的方法会使用旧对象去调用旧方法，同时在该方法中添加新功能，旧对象是外部提供。
 - 代理模式：代理类和被代理类实现的是同一个接口，且代理类持有被代理类的对象，意图是隐藏原类。
-
-## 类加载机制
-
-类加载器ClassLoader是加载其他类的类，负责将字节码文件加载到内存，创建Class对象。
