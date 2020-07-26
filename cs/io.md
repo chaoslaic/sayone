@@ -107,25 +107,25 @@ IO多路复用是指内核一旦发现进程指定的一个或者多个IO条件�
 
 ### 传统读操作
 
-当应用程序执行read系统调用读取一块数据的时候，如果这块数据已经存在于用户进程的页内存中，就直接从内存中读取数据；如果数据不存在，则先将数据从磁盘加载数据到内核空间的读缓存（read buffer）中，再从读缓存拷贝到用户进程的页内存中。
+当应用程序执行read系统调用读取一块数据的时候，如果这块数据已经存在于用户进程的页内存中，就直接从内存中读取数据；如果数据不存在，则先将数据从磁盘加载数据到内核空间的读缓存中，再从读缓存拷贝到用户进程的页内存中。
 
 基于传统的IO读取方式，read系统调用会触发2次上下文切换，1次DMA拷贝和1次CPU拷贝，发起数据读取的流程如下：
 
-- 用户进程通过read()函数向内核（kernel）发起系统调用，上下文从用户态（user space）切换为内核态（kernel space）。
-- CPU利用DMA控制器将数据从主存或硬盘拷贝到内核空间（kernel space）的读缓冲区（read buffer）。
-- CPU将读缓冲区（read buffer）中的数据拷贝到用户空间（user space）的用户缓冲区（user buffer）。
-- 上下文从内核态（kernel space）切换回用户态（user space），read 调用执行返回。
+- 用户进程通过read()函数向内核发起系统调用，上下文从用户态切换为内核态。
+- CPU利用DMA控制器将数据从主存或硬盘拷贝到内核空间的读缓冲区。
+- CPU将读缓冲区中的数据拷贝到用户空间的用户缓冲区（user buffer）。
+- 上下文从内核态切换回用户态，read 调用执行返回。
 
 ### 传统写操作
 
-当应用程序准备好数据，执行write系统调用发送网络数据时，先将数据从用户空间的页缓存拷贝到内核空间的网络缓冲区（socket buffer）中，然后再将写缓存中的数据拷贝到网卡设备完成数据发送。
+当应用程序准备好数据，执行write系统调用发送网络数据时，先将数据从用户空间的页缓存拷贝到内核空间的网络缓冲区中，然后再将写缓存中的数据拷贝到网卡设备完成数据发送。
 
 基于传统的IO写入方式，write()系统调用会触发2次上下文切换，1次CPU拷贝和1次DMA拷贝，用户程序发送网络数据的流程如下：
 
-- 用户进程通过write()函数向内核（kernel）发起系统调用，上下文从用户态（user space）切换为内核态（kernel space）。
-- CPU将用户缓冲区（user buffer）中的数据拷贝到内核空间（kernel space）的网络缓冲区（socket buffer）。
-- CPU利用DMA控制器将数据从网络缓冲区（socket buffer）拷贝到网卡进行数据传输。
-- 上下文从内核态（kernel space）切换回用户态（user space），write 系统调用执行返回。
+- 用户进程通过write()函数向内核发起系统调用，上下文从用户态切换为内核态。
+- CPU将用户缓冲区（user buffer）中的数据拷贝到内核空间的网络缓冲区。
+- CPU利用DMA控制器将数据从网络缓冲区拷贝到网卡进行数据传输。
+- 上下文从内核态切换回用户态，write系统调用执行返回。
 
 ### Linux零拷贝方式
 
@@ -145,14 +145,14 @@ IO多路复用是指内核一旦发现进程指定的一个或者多个IO条件�
 
 基于mmap + write系统调用的零拷贝方式，整个拷贝过程会发生4次上下文切换，1次CPU拷贝和2次DMA拷贝，用户程序读写数据的流程如下：
 
-- 用户进程通过mmap()函数向内核（kernel）发起系统调用，上下文从用户态（user space）切换为内核态（kernel space）。
-- 将用户进程的内核空间的读缓冲区（read buffer）与用户空间的缓存区（user buffer）进行内存地址映射。
-- CPU利用DMA控制器将数据从主存或硬盘拷贝到内核空间（kernel space）的读缓冲区（read buffer）。
-- 上下文从内核态（kernel space）切换回用户态（user space），mmap系统调用执行返回。
-- 用户进程通过write()函数向内核（kernel）发起系统调用，上下文从用户态（user space）切换为内核态（kernel space）。
-- CPU将读缓冲区（read buffer）中的数据拷贝到的网络缓冲区（socket buffer）。
-- CPU利用DMA控制器将数据从网络缓冲区（socket buffer）拷贝到网卡进行数据传输。
-- 上下文从内核态（kernel space）切换回用户态（user space），write系统调用执行返回。
+- 用户进程通过mmap()函数向内核发起系统调用，上下文从用户态切换为内核态。
+- 将用户进程的内核空间的读缓冲区与用户空间的缓冲区（user buffer）进行内存地址映射。
+- CPU利用DMA控制器将数据从主存或硬盘拷贝到内核空间的读缓冲区。
+- 上下文从内核态切换回用户态，mmap系统调用执行返回。
+- 用户进程通过write()函数向内核发起系统调用，上下文从用户态切换为内核态。
+- CPU将读缓冲区中的数据拷贝到的网络缓冲区。
+- CPU利用DMA控制器将数据从网络缓冲区拷贝到网卡进行数据传输。
+- 上下文从内核态切换回用户态，write系统调用执行返回。
 
 mmap主要的用处是提高IO性能，特别是针对大文件。对于小文件，内存映射文件反而会导致碎片空间的浪费，因为内存映射总是要对齐页边界，最小单位是4KB，一个5KB的文件将会映射占用8KB内存，也就会浪费3KB内存。
 
@@ -162,23 +162,23 @@ sendfile系统调用在Linux内核版本2.1中被引入，适用于将数据从�
 
 基于sendfile系统调用的零拷贝方式，整个拷贝过程会发生2次上下文切换，1次CPU拷贝和2次DMA拷贝，用户程序读写数据的流程如下：
 
-- 用户进程通过sendfile()函数向内核（kernel）发起系统调用，上下文从用户态（user space）切换为内核态（kernel space）。
-- CPU利用DMA控制器将数据从主存或硬盘拷贝到内核空间（kernel space）的读缓冲区（read buffer）。
-- CPU将读缓冲区（read buffer）中的数据拷贝到的网络缓冲区（socket buffer）。
-- CPU利用DMA控制器将数据从网络缓冲区（socket buffer）拷贝到网卡进行数据传输。
-- 上下文从内核态（kernel space）切换回用户态（user space），sendfile系统调用执行返回。
+- 用户进程通过sendfile()函数向内核发起系统调用，上下文从用户态切换为内核态。
+- CPU利用DMA控制器将数据从主存或硬盘拷贝到内核空间的读缓冲区。
+- CPU将读缓冲区中的数据拷贝到的网络缓冲区。
+- CPU利用DMA控制器将数据从网络缓冲区拷贝到网卡进行数据传输。
+- 上下文从内核态切换回用户态，sendfile系统调用执行返回。
 
 #### sendfile + DMA gather copy
 
-Linux2.4版本的内核对sendfile系统调用进行修改，为DMA拷贝引入了gather操作。它将内核空间（kernel space）的读缓冲区（read buffer）中对应的数据描述信息（内存地址、地址偏移量）记录到相应的网络缓冲区（socket buffer）中，由DMA根据内存地址、地址偏移量将数据批量地从读缓冲区（read buffer）拷贝到网卡设备中，这样就省去了内核空间中仅剩的1次CPU拷贝操作。
+Linux2.4版本的内核对sendfile系统调用进行修改，为DMA拷贝引入了gather操作。它将内核空间的读缓冲区中对应的数据描述信息（内存地址、地址偏移量）记录到相应的网络缓冲区中，由DMA根据内存地址、地址偏移量将数据批量地从读缓冲区拷贝到网卡设备中，这样就省去了内核空间中仅剩的1次CPU拷贝操作。
 
 基于sendfile + DMA gather copy系统调用的零拷贝方式，整个拷贝过程会发生2次上下文切换、0次CPU拷贝以及2次DMA拷贝，用户程序读写数据的流程如下：
 
-- 用户进程通过sendfile()函数向内核（kernel）发起系统调用，上下文从用户态（user space）切换为内核态（kernel space）。
-- CPU利用DMA控制器将数据从主存或硬盘拷贝到内核空间（kernel space）的读缓冲区（read buffer）。
-- CPU把读缓冲区（read buffer）的文件描述符（file descriptor）和数据长度拷贝到网络缓冲区（socket buffer）。
-- 基于已拷贝的文件描述符（file descriptor）和数据长度，CPU利用DMA控制器的gather/scatter操作直接批量地将数据从内核的读缓冲区（read buffer）拷贝到网卡进行数据传输。
-- 上下文从内核态（kernel space）切换回用户态（user space），sendfile系统调用执行返回。
+- 用户进程通过sendfile()函数向内核发起系统调用，上下文从用户态切换为内核态。
+- CPU利用DMA控制器将数据从主存或硬盘拷贝到内核空间的读缓冲区。
+- CPU把读缓冲区的文件描述符（file descriptor）和数据长度拷贝到网络缓冲区。
+- 基于已拷贝的文件描述符（file descriptor）和数据长度，CPU利用DMA控制器的gather/scatter操作直接批量地将数据从内核的读缓冲区拷贝到网卡进行数据传输。
+- 上下文从内核态切换回用户态，sendfile系统调用执行返回。
 
 #### splice
 
@@ -186,11 +186,11 @@ Linux在2.6.17版本引入splice系统调用，适用两个文件描述符之间
 
 基于splice系统调用的零拷贝方式，整个拷贝过程会发生2次上下文切换，0次CPU拷贝以及2次DMA拷贝，用户程序读写数据的流程如下：
 
-- 用户进程通过splice()函数向内核（kernel）发起系统调用，上下文从用户态（user space）切换为内核态（kernel space）。
-- CPU利用DMA控制器将数据从主存或硬盘拷贝到内核空间（kernel space）的读缓冲区（read buffer）。
-- CPU在内核空间的读缓冲区（read buffer）和网络缓冲区（socket buffer）之间建立管道（pipeline）。
-- CPU利用DMA控制器将数据从网络缓冲区（socket buffer）拷贝到网卡进行数据传输。
-- 上下文从内核态（kernel space）切换回用户态（user space），splice系统调用执行返回。
+- 用户进程通过splice()函数向内核发起系统调用，上下文从用户态切换为内核态。
+- CPU利用DMA控制器将数据从主存或硬盘拷贝到内核空间的读缓冲区。
+- CPU在内核空间的读缓冲区和网络缓冲区之间建立管道（pipeline）。
+- CPU利用DMA控制器将数据从网络缓冲区拷贝到网卡进行数据传输。
+- 上下文从内核态切换回用户态，splice系统调用执行返回。
 
 #### 写时复制
 
@@ -200,15 +200,15 @@ Linux在2.6.17版本引入splice系统调用，适用两个文件描述符之间
 
 缓冲区共享方式完全改写了传统的IO操作，因为传统IO接口都是基于数据拷贝进行的，要避免拷贝就得去掉原先的那套接口并重新改写，所以这种方法是比较全面的零拷贝技术，目前比较成熟的一个方案是在Solaris上实现的fbuf（Fast Buffer，快速缓冲区）。
 
-fbuf的思想是每个进程都维护着一个缓冲区池，这个缓冲区池能被同时映射到用户空间（user space）和内核态（kernel space），内核和用户共享这个缓冲区池，这样就避免了一系列的拷贝操作。
+fbuf的思想是每个进程都维护着一个缓冲区池，这个缓冲区池能被同时映射到用户空间和内核态，内核和用户共享这个缓冲区池，这样就避免了一系列的拷贝操作。
 
 缓冲区共享的难度在于管理共享缓冲区池需要应用程序、网络软件以及设备驱动程序之间的紧密合作，而且如何改写API目前还处于试验阶段并不成熟。
 
 ### Java零拷贝方式
 
-在Java NIO中的通道（Channel）就相当于操作系统的内核空间（kernel space）的缓冲区，而缓冲区（Buffer）对应的相当于操作系统的用户空间（user space）中的用户缓冲区（user buffer）。
+在Java NIO中的通道（Channel）就相当于操作系统的内核空间的缓冲区，而缓冲区（Buffer）对应的相当于操作系统的用户空间中的用户缓冲区（user buffer）。
 
-- 通道（Channel）是全双工的（双向传输），它既可能是读缓冲区（read buffer），也可能是网络缓冲区（socket buffer）。
+- 通道（Channel）是全双工的（双向传输），它既可能是读缓冲区，也可能是网络缓冲区。
 - 缓冲区（Buffer）分为堆内存（HeapBuffer）和堆外内存（DirectBuffer），这是通过malloc()分配出来的用户态内存。
 
 堆外内存（DirectBuffer）在使用后需要应用程序手动回收，而堆内存（HeapBuffer）的数据在GC时可能会被自动回收。因此，在使用HeapBuffer读写数据时，为了避免缓冲区数据因为GC而丢失，NIO会先把HeapBuffer内部的数据拷贝到一个临时的DirectBuffer中的本地内存（native memory），这个拷贝涉及到sun.misc.Unsafe.copyMemory()的调用，背后的实现原理与memcpy()类似。最后，将临时生成的DirectBuffer内部的数据的内存地址传给IO调用函数，这样就避免了再去访问Java对象处理IO读写。
