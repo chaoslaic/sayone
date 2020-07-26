@@ -146,6 +146,26 @@ MyBatis是一款在持久层使用的SQL映射框架，可以将SQL语句单独�
 - 依赖注入：构造器、set方法、静态工厂、实例工厂。
 - 自动装配：no、byName、byType、constructor、autodetect。
 
+### Srping Bean生命周期
+
+- 实例化Bean：容器通过获取BeanDefinition对象中的信息进行实例化，实例化对象被包装在BeanWrapper对象中。
+  - InstantiationAwareBeanPostProcessor：作用于实例化阶段的前后。
+- 设置对象属性（依赖注入）：Spring根据BeanDefinition中的信息进行依赖注入，通过BeanWrapper提供的设置属性的接口完成依赖注入。
+- 注入Aware接口：Spring会检测该对象是否实现了xxxAware接口，并将相关的xxxAware实例注入给bean。BeanNameAware、BeanClassLoaderAware、BeanFactoryAware。
+- BeanPostProcessor：自定义处理，postProcessBeforeInitialzation前置处理、postProcessAfterInitialzation后置处理，在InitializingBean的前后。
+- InitializingBean（初始化）：InitializingBean接口的函数afterPropertiesSet，Spring为了降低对客户代码的侵入性，给bean的配置提供了init-method属性，该属性指定了在这一阶段需要执行的函数名。
+- DisposableBean：和init-method一样，通过给destroy-method指定函数，就可以在bean销毁前执行指定的逻辑。
+
+### Spring事务传播机制
+
+- propagation_requierd：如果当前没有事务，就新建一个事务，如果已存在一个事务中，加入到这个事务中，这是最常见的选择。
+- propagation_supports：支持当前事务，如果没有当前事务，就以非事务方法执行。
+- propagation_mandatory：使用当前事务，如果没有当前事务，就抛出异常。
+- propagation_required_new：新建事务，如果当前存在事务，把当前事务挂起。
+- propagation_not_supported：以非事务方式执行操作，如果当前存在事务，就把当前事务挂起。
+- propagation_never：以非事务方式执行操作，如果当前事务存在则抛出异常。
+- propagation_nested：如果当前存在事务，则在嵌套事务内执行。如果当前没有事务，则执行与propagation_required类似的操作。
+
 ### Spring MVC
 
 - 客户端发起HTTP请求：客户端将请求提交到DispatcherServlet。
@@ -363,11 +383,11 @@ channelFuture.channel().closeFuture().sync();
 
 ## Redis
 
-### 优势
-
 - 内存存储数据库。
 - 单进程线程的服务，单线程处理网络请求，IO多路复用模型。
 - 良好的数据类型。
+
+因为CPU不是Redis服务器的瓶颈，所以使用多线程模型带来的性能提升并不能抵消它带来的开发成本和维护成本，系统的性能瓶颈主要在网络IO操作上。
 
 ### 五种数据类型
 
@@ -505,3 +525,9 @@ etcd依据paxos协议所实现。
 - 领导接收到数据标为未提交且向成员复制数据后挂了：拥有最新数据的成员成为领导，并向其他成员复制，客户端幂等提交。
 - 领导标记为已提交后挂了：拥有最新数据的成员成为领导，并向其他成员复制，客户端幂等提交。
 - 脑裂问题：3个节点在a组，两个节点在b组，此时ab组分离，a组的领导发现响应不超过一半成员，写入失败，b组产生领导，客户端向b领导写入成功。
+
+## canal
+
+- canal模拟mysql slave的交互协议，伪装自己为mysql slave，向mysql master发送dump协议。
+- mysql master收到dump请求，开始推送binary log给slave(也就是canal)。
+- canal解析binary log对象(原始为byte流)。
