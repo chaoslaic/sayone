@@ -56,7 +56,7 @@ Java主要分为基础知识和高级特性。
 
 利用hash值提高比较性能。hash值默认是对象内存地址的计算。若想比较两个对象是否相等，需同时覆盖对象的hashCode方法和equals方法，并且其方法的返回值相同。
 
-HashMap扩容的时候链表会倒置顺序，多线程会导致HashMap的Entry链表形成环形数据结构，一旦形成环形数据结构，Entry的next节点永远不为空，就会产生死循环获取Entry。比如两个线程，一个线程先完成倒置，另一个线程就会死循环。
+HashMap扩容的时候链表会倒置顺序，多线程会导致HashMap的Entry链表形成环形数据结构，一旦形成环形数据结构，Entry的next节点永远不为空，就会产生死循环获取Entry。
 
 ConcurrentHashMap，Java7每个段单独处理。Java8后来的线程会协助扩容。
 
@@ -107,10 +107,10 @@ Collections以静态方法的方式提供了通用功能。
 ### 分类
 
 - Throwable：分为Error、Exception。
-- Error：运行错误，系统出现Error将退出进程，常见的有ThreadDeath。
-- Exception：运行异常，异常处理机制可处理，分为RuntimeException、CheckedException。
-  - RuntimeException：运行期间抛出的异常，常见的有NullPointerException、ClassCastException。
-  - CheckedException：编译阶段强制捕获和处理此类异常，常见的有IOException、ClassNotFoundException。
+  - Error：运行错误，系统出现Error将退出进程，常见的有ThreadDeath。
+  - Exception：运行异常，异常处理机制可处理，分为RuntimeException、CheckedException。
+    - RuntimeException：运行期间抛出的异常，常见的有NullPointerException、ClassCastException。
+    - CheckedException：编译阶段强制捕获和处理此类异常，常见的有IOException、ClassNotFoundException。
 
 ### 处理方式
 
@@ -161,8 +161,16 @@ m.invoke(p2, "法外狂徒");
 
 运行时动态创建一个类，在不修改原有类的基础上动态为通过该类获取的对象添加方法、修改行为。
 
-- JDK动态代理：只代理接口，通过java.lang.reflect包中Proxy类和InvocationHandler接口实现。
+- JDK动态代理：只代理接口，利用拦截器加上反射机制生成一个实现代理接口的匿名类。
+  - 定义一个java.lang.reflect.InvocationHandler接口的实现类，重写invoke方法。
+  - 将InvocationHandler对象作为参数传入java.lang.reflect.Proxy的newProxyInstance方法中。
+  - 通过调用java.lang.reflect.Proxy的newProxyInstance方法获得动态代理对象。
+  - 通过代理对象调用目标方法。
 - CGLib动态代理：可代理类，通过字节码处理框架ASM来实现，通过转换字节码生成新的类。
+  - 定义一个org.springframework.cglib.proxy.MethodInterceptor接口的实现类，重写intercept方法。
+  - 获取org.springframework.cglib.proxy.Enhancer类的对象。
+  - 分别调用Enhancer对象的setSuperclass和setCallback方法，使用create方法获取代理对象。
+  - 通过代理对象调用目标方法。
 
 ### 静态代理
 
