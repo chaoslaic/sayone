@@ -12,6 +12,7 @@
 - [简单说一下中间件][middleware]
 - [简单说一下MySQL][mysql]
 - [简单说一下网络][network]
+- [简单说一下分布式事务][transaction]
 
 ## 支付
 
@@ -28,5 +29,6 @@
 [middleware]:https://github.com/chaoslaic/sayone/blob/master/cs/middleware.md
 [mysql]:https://github.com/chaoslaic/sayone/blob/master/cs/mysql.md
 [network]:https://github.com/chaoslaic/sayone/blob/master/cs/network.md
+[transaction]:https://github.com/chaoslaic/sayone/blob/master/cs/transaction.md
 [history]:https://github.com/chaoslaic/sayone/blob/master/payment/history.md
 [term]:https://github.com/chaoslaic/sayone/blob/master/payment/term.md
