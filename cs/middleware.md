@@ -120,41 +120,21 @@ MyBatis是一款在持久层使用的SQL映射框架，可以将SQL语句单独�
 - Web应用层：Web、Web-MVC、Web-Socket、Web-Portlet。
 - 其他模块：AOP、Aspects、Instrumentation、Messaging、Test。
 
-### Spring容器基础概念
-
-- BeanDefinition：描述Spring Bean的配置信息，Spring配置Bean的方式通常有3种：XML配置文件、Java注解、Java Config方式。
-- BeanDefinitionRegistry：BeanDefiniton的容器，所有的Bean配置解析后生成的BeanDefinition对象都会注册到BeanDefinitionRegistry对象中。
-- BeanFactory：Spring的Bean工厂，负责Bean的创建及属性注入。所有的单例Bean都会注册到BeanFactory容器中。
-- BeanFacotryPostProcessor：Spring提供的扩展机制，用于在所有的Bean配置信息解析完成后修改Bean工厂信息。
-- ImportBeanDefinitionRegistrar：作用于Spring解析Bean的配置阶段，当解析@Configuration注解时，通过此接口的实现类向BeanDefinitionRegistry容器添加额外的BeanDefinition对象。
-- BeanPostProcessor：Bean的后置处理器，在Bean初始化方法调用前后执行定义的拦截逻辑。
-- ClassPathBeanDefinitionScanner：BeanDefinition扫描器，将指定包下的Class信息转换为BeanDefinition对象并注册到BeanDefinitionRegistry容器中。
-- FactoryBean：Spring中的工厂Bean，处理Spring中配置较为复杂或者由动态代理生成的Bean实例。通过Bean名称获取FactoryBean实例时，获取的是FacotryBean对象的getObject()方法返回的实例。
-
-### Spring容器启动过程
-
-- 对所有Bean的配置信息进行解析，将Bean的配置信息转换为BeanDefinition对象，并注册到BeanDefinitionRegistry容器中。
-- 从BeanDefinitionRegistry容器中获取实现了BeanFactoryPostProcessor接口的Bean定义，然后实例化Bean，调用postProcessBeanFactory()方法，可对Bean工厂的信息进行修改。
-- 根据BeanDefinitionRegistry容器中的BeanDefinition对象实例化所有的单例Bean，并对Bean的属性进行填充。
-- 执行所有实现了BeanPostProcessor接口的Bean的postProcessBeforeInitialization()方法，可对原始的Bean进行包装。
-- 执行Bean的初始化方法，初始化方法包括配置Bean的init-method方法，实现InitializingBean接口重写的afterPropertiesSet()方法。
-- 执行所有实现了BeanPostProcessor接口的Bean的postProcessAfterInitialization()方法。
-
 ### Spring Bean
 
+- 配置bean方式：XML配置文件、Java注解、Java Config。
 - 作用域：Singleton（单例）、Prototype（原型）、Request（HTTP请求级别）、Session（HTTP会话级别）、Global Session（HTTP全局会话）。
 - 依赖注入：构造器、set方法、静态工厂、实例工厂。
 - 自动装配：no、byName、byType、constructor、autodetect。
 
 ### Srping Bean生命周期
 
-- 实例化Bean：容器通过获取BeanDefinition对象中的信息进行实例化，实例化对象被包装在BeanWrapper对象中。
-  - InstantiationAwareBeanPostProcessor：作用于实例化阶段的前后。
-- 设置对象属性（依赖注入）：Spring根据BeanDefinition中的信息进行依赖注入，通过BeanWrapper提供的设置属性的接口完成依赖注入。
-- 注入Aware接口：Spring会检测该对象是否实现了xxxAware接口，并将相关的xxxAware实例注入给bean。BeanNameAware、BeanClassLoaderAware、BeanFactoryAware。
-- BeanPostProcessor：自定义处理，postProcessBeforeInitialzation前置处理、postProcessAfterInitialzation后置处理，在InitializingBean的前后。
-- InitializingBean（初始化）：InitializingBean接口的函数afterPropertiesSet，Spring为了降低对客户代码的侵入性，给bean的配置提供了init-method属性，该属性指定了在这一阶段需要执行的函数名。
-- DisposableBean：和init-method一样，通过给destroy-method指定函数，就可以在bean销毁前执行指定的逻辑。
+- 实例化Bean：容器通过获取BeanDefinition对象中的信息进行实例化。
+- 设置对象属性：实例化对象被包装在BeanWrapper对象中，通过BeanWrapper的设置属性接口完成依赖注入。
+- 注入Aware接口：将实现的xxxAware接口实例注入给bean。有BeanNameAware、BeanClassLoaderAware、BeanFactoryAware等。
+- 初始化：先执行InitializingBean接口的afterPropertiesSet方法，后执行给bean配置的init-method属性，该属性指定了需要执行的方法名。
+  - BeanPostProcessor：自定义处理，postProcessBeforeInitialzation前置处理、postProcessAfterInitialzation后置处理，在初始化的前后。
+- 销毁：先执行DisposableBean接口的destroy方法，后执行给bean配置的destroy-method属性，该属性指定了需要执行的方法名。
 
 ### Spring事务传播机制
 
@@ -211,6 +191,11 @@ starters可以理解为启动器，它包含了一系列可以集成到应用里
 
 ## Dubbo
 
+- Provider：服务提供者，启动时将服务注册到Register，暴露提供的服务。
+- Consumer：服务消费者，启动时去Register订阅自己需要的服务地址，通过路由规则和负载均衡后，rpc远程调用服务提供者提供的服务。
+- Register：服务注册与发现。
+- Monitor：监控中心，统计调用次数、调用时间，Provider、Consumer每分钟上报数据。
+
 ### 增强SPI原理
 
 Dubbo的扩展点加载机制基于SPI而来的，解决了SPI的以下问题：
@@ -224,13 +209,6 @@ Dubbo的扩展点加载机制基于SPI而来的，解决了SPI的以下问题：
 - Dubbo会给每个SPI扩展接口动态生成一个对应的适配器类，根据参数来选择使用增强SPI实现。
 - 比如扩展接口ProxyFactory的适配器类为ProxyFactory$Adaptive，其根据参数proxy来决定使用JdkProxyFactory、JavassistProxyFactory中的一个做代理工厂。
 - 比如扩展接口Registry的适配器类为Register$Adaptive，其根据参数Register来决定使用ZooKeeperRegister、RedisRegister、MulticastRegister、DubboRegister中的一个做服务注册中心。
-
-### 服务架构
-
-- Provider：服务提供者，启动时将服务注册到Register，暴露提供的服务。
-- Consumer：服务消费者，启动时去Register订阅自己需要的服务地址，通过路由规则和负载均衡后，rpc远程调用服务提供者提供的服务。
-- Register：服务注册与发现。
-- Monitor：监控中心，统计调用次数、调用时间，Provider、Consumer每分钟上报数据。
 
 ### 分层架构
 
@@ -273,7 +251,7 @@ boss线程池接受客户端的链接请求，并把完成TPC三次握手的连�
 ### 协议的比较
 
 - dubbo协议：为dubbo默认的协议，消费者比提供者多，小数据，默认hessian2序列化。
-- dubbo协议：提供者比消费者多，大数据，默认hessian序列化。
+- hessian协议：提供者比消费者多，大数据，默认hessian序列化。
 - rmi协议：默认java原生序列化。
 - http协议：默认json序列化。
 
@@ -289,6 +267,8 @@ boss线程池接受客户端的链接请求，并把完成TPC三次握手的连�
 路由管理、服务注册、服务发现。
 
 Broker每隔30s向NameService上报心跳包。NameService每隔10s扫描心跳包信息，若超过120s未上报则移除Broker信息。
+
+在RocketMQ中，不需要选举，Master/Slave的角色也是固定的。当一个Master挂了之后，可以写到其他Master上，但不会从一个Slave切换成Master。这种简化，使得RocketMQ可以不依赖ZK就很好的管理Topic/queue和物理机器的映射关系了，也实现了高可用。
 
 ### producer
 
@@ -311,17 +291,15 @@ Broker每隔30s向NameService上报心跳包。NameService每隔10s扫描心跳�
 
 刷盘方式：同步、异步。异步是先将消息追加到内存映射文件，后定时将内存中的数据刷写到磁盘。
 
-### consuemr
+允许消息消费者在订阅主题消息时上传消息过滤类到FilterServer，由于FilterServer与Broker运行在同一台机器上，通过本地回环通信不会浪费Broker端的网络资源。
+
+### consumer
 
 消息消费方式：广播、集群。
 
 - 集群消息消费队列负载：同一个消费者可以分配多个消费队列，同一个消费队列同一时间内只会分配给一个消费者。
 - 消息拉取：默认一批拉取32条，提交给消费线程池后继续拉取下一批。PUSH、PULL，Push为消费者端长轮询所实现。
 - 消息消费完成：将消息消费进度偏移量存储在消息消费进度存储文件中，集群的进度文件在Broker端，广播的进度文件在消费者端。
-
-### 为什么要nameserver不要zk
-
-在RocketMQ中，不需要选举，Master/Slave的角色也是固定的。当一个Master挂了之后，可以写到其他Master上，但不会从一个Slave切换成Master。这种简化，使得RocketMQ可以不依赖ZK就很好的管理Topic/queue和物理机器的映射关系了，也实现了高可用。
 
 ### 集群
 
@@ -355,12 +333,11 @@ Broker每隔30s向NameService上报心跳包。NameService每隔10s扫描心跳�
 
 ### Netty组件
 
-- Bootstrap：启动配置。
-- EventLoop：事件循环。
-- Pipeline：管道。
-- Future、Promise：异步处理。
-- ByteBuf：内存分配。
-- 编解码。
+- Channel：网络操作的抽象类，包括基本的IO操作，如bind、connect、read、write等。
+- EventLoop：配合Channel处理IO操作，用来处理连接的生命周期中所发生的事情。
+- ChannelFuture：框架中所有的IO操作都是异步的，因此需要ChannelFuture的addListener注册一个ChannelFutureListener监听事件，当操作执行成功或者失败时，监听就会自动触发返回结果。
+- ChannelHandler：充当所有处理入栈和出栈数据的逻辑容器。处理各种事件，如连接、数据接收、异常、数据转换等。
+- ChannelPipeline：为ChannelHandler链提供了容器，当Channel创建时，就会被自动分配到它专属的ChannelPipeline，这个关联是永久的。
 
 ```java
 EventLoopGroup group = new NioEventLoopGroup();
@@ -404,7 +381,7 @@ channelFuture.channel().closeFuture().sync();
 - ziplist：压缩链表，存储空间连续；元素少且长度少；元素多时修改元素需重新调整空间。
 - adlist：双向链表，不满足ziplist的元素少且长度少的链表。
 - quicklist：快速链表，组合ziplist和adlist、综合考虑时间效率和空间效率。
-- dict：字典，散列表；两个hash表，用来进行扩表。
+- dict：字典表；两个hash表，用来进行扩表。
 - intset：整数集合，有序存储整型。
 
 ### Pipelining
@@ -427,15 +404,15 @@ channelFuture.channel().closeFuture().sync();
 
 ```sql
 EVAL script numkeys key [key ...] arg [arg ...]
-> EVAL “script” 2 wxList wxCount expired limit
+> EVAL "script" 2 wxList wxCount expired limit
 
 redis.call("incr", wxCount)
 
-> SCRIPT LOAD “script”
+> SCRIPT LOAD "script"
 afwfwaaefwawafw
 
 EVALSHA sha1 numkeys key [key ...] arg [arg ...]
-> EVALSHA  “afwfwaaefwawafw” 2 wxList wxCount expired limit
+> EVALSHA  "afwfwaaefwawafw" 2 wxList wxCount expired limit
 
 ```
 
