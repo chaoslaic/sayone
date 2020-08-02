@@ -14,8 +14,8 @@ JVM（Java Virtual Machine，Java虚拟机）是一种抽象的计算机，基�
 
 使用JDK（调用JAVA API）开发JAVA程序后，通过JDK中的编译程序（javac）将Java程序编译为Java字节码，在JRE上运行这些字节码，JVM会解析并映射到真实操作系统的CPU指令集和OS的系统调用。
 
-- JRE（Java Runtime Environment，Java运行环境）是Java平台，所有的程序都要在JRE下才能够运行。包括JVM和Java核心类库和支持文件。
 - JDK（Java Development Kit，Java开发工具包）是用来编译、调试Java程序的开发工具包。包括Java工具（javac/java/jdb等）和Java基础的类库（java API）。
+- JRE（Java Runtime Environment，Java运行环境）是Java平台，所有的程序都要在JRE下才能够运行。包括JVM和Java核心类库和支持文件。
 - JVM（Java Virtual Machine，Java虚拟机）是JRE的一部分。JVM主要工作是解释自己的指令集（即字节码）并映射到本地的CPU指令集和OS的系统调用。Java语言是跨平台运行的，不同的操作系统会有不同的JVM映射规则，使之与操作系统无关，完成跨平台性。
 
 ## 类加载器子系统
@@ -50,7 +50,7 @@ JVM（Java Virtual Machine，Java虚拟机）是一种抽象的计算机，基�
   - 验证：文件格式、元数据、字节码、符号引用。
   - 准备：类变量的初始值。
   - 解析：直接引用、常量池。
-- 初始化：父类静态成员变量、静态代码块-->子类静态成员变量、静态代码块-->父类普通代码块-->父类构造方法-->子类普通代码块-->子类构造方法。
+- 初始化：父类静态成员变量、静态代码块-->子类静态成员变量、静态代码块-->父类普通成员变量、普通代码块、构造方法-->子类普通成员变量、普通代码块、构造方法。
 - 使用
 - 卸载
 
@@ -79,6 +79,8 @@ findClass：一开始就有ClassLoader#loadClass，1.2之后引入双亲委派�
 
 - 程序计数器：执行字节码的行号指示器。
 - 方法区：运行时常量池、类信息。
+  - 永久代：是HotSpot虚拟机对虚拟机规范中方法区的一种实现方式。
+  - 元空间：JDK8用元空间代替永久代，因为永久代有一个JVM本身设置固定大小上限，无法进行调整，而元空间使用的是直接内存。另外在JDK8合并HotSpot和JRockit的代码时，JRockit没有永久代的东西。
 - Java堆：类对象。
 - 本地方法栈：本地方法的数据。
 - Java虚拟机栈：Java方法的数据。
@@ -110,21 +112,21 @@ findClass：一开始就有ClassLoader#loadClass，1.2之后引入双亲委派�
 
 ### 创建对象过程
 
-new、dup、invokespecial
+new、dup、invokespecial：分配对象的内存空间、初始化对象、设置实例指向刚分配的内存地址。
 
 - new指令触发：new、newInstance、clone、序列化。
 类初始化（new）：当Java虚拟机遇到一条字节码new指令时，检查这个指令的参数能否在常量池中定位到一个类的符号引用，这个符号引用代表的类是否已被加载、解析和初始化。
 实例初始化（invokespecial）：实例字段、实例代码块、实例默认构造方法。
 
 - 分配内存（Java堆）：分配并发问题通过CAS解决，或通过TLAB预先分配内存。
-  - 指针碰撞：使用Serial、ParNew标记整理的收集器，指针指向空闲空间。
-  - 空闲列表：使用CMS标记清除的收集器，需要维护一个内存空闲列表。
+  - 指针碰撞：使用Serial、ParNew标记复制的收集器，指针指向空闲空间。
+  - 空闲列表：使用CMS标记整理的收集器，需要维护一个内存空闲列表。
 
 ### 对象结构
 
 - 对象头
   - 类型指针：指向类型元数据（类信息）的指针。
-  - 对象运行时数据：哈希码、GC分代年龄、锁状态标志、线程持有的锁、偏向线程ID、偏向时间戳等。数据长度根据机器位数决定，可通过压缩指针将64位减为32位。
+  - 对象运行时数据（Mark Word）：哈希码、GC分代年龄、锁状态标志、线程持有的锁、偏向线程ID、偏向时间戳等。数据长度根据机器位数决定，可通过压缩指针将64位减为32位。
 - 实例数据：父类定义的变量会出现在子类之前。
 - 对齐补充：8字节的整数倍。
 
@@ -192,11 +194,23 @@ new、dup、invokespecial
 ### 垃圾回收算法
 
 - 标记清除
-- 标记复制
-- 标记整理
+- 标记复制：新生代。
+- 标记整理：老年代。
 
-新生代：标记复制。
-老年代：标记整理。
+### 垃圾收集器分类
+
+- Serial：新生代串行收集器，复制算法，Client模式的默认收集器。
+- ParNew：新生代并行收集器，复制算法，是Serial收集器的多线程版本。
+- Parallel Scavenge：新生代并行收集器，复制算法，追求高吞吐量，高效利用CPU。
+- Serial Old：老年代串行收集器，标记整理算法，是Serial收集器的老年代版本，Client模式的默认收集器。
+- Parallel Old：老年代并发收集器，标记整理算法，是Parallel Scavenge收集器的老年代版本。
+- CMS：老年代并发收集器，标记整理算法，分为新生代和老年代，无法处理浮动垃圾。
+- G1：垃圾优先收集器，标记整理算法，堆内存分割成了若干相同大小的区域，即region，包括Eden、Survivor、Old、Humongous四种类型。
+- ZGC：和G1类似，但ZGC的region的大小更加灵活和动态。zgc的region不会像G1那样在一开始就被划分为固定大小的region。
+
+Serial、PraNew可与CMS、Serial Old搭配。Parallel Scavenge可与Serial Old、Parallel Old搭配。
+
+jdk7、jdk8默认垃圾收集器为Parallel Scavenge、Parallel Old，jdk9默认垃圾收集器为G1。
 
 ### 分代垃圾回收过程
 
@@ -204,16 +218,9 @@ JVM堆分为新生代（1/3）、老年代（2/3）、永久代（占非常少�
 
 JVM新创建的对象（大对象放到老年代）会被放在新生代的Eden区。在Eden区内存空间不足时会触发MinorGC。ServivorFrom区、ServivorTo区轮流存放上一次MinorGC时的幸存者。幸存者的年龄过高（15次）则将其放到老年代。老年代空间不足会触发MajorGC。
 
-### 垃圾收集器分类
+### 并发标记回收过程
 
-- 串行回收：Serial、Serial Old。
-- 并行回收：ParNew、Parallel Scavenge。
-- 并发标记回收：CMS、Parallel Old。
-- 垃圾优先回收：G1。
-
-### cms、g1垃圾收集器
-
-- 初始标记
-- 并发标记
-- 最终标记
-- 筛选回收
+- 初始标记：标记从GC根开始直接可达的对象。STW。
+- 并发标记：从GC根开始对堆中对象进行可达性分析，找出存活对象。
+- 最终标记：标记那些在并发标记阶段发生变化的对象，将被回收。STW。
+- 筛选回收：首先对各个Regin的回收价值和成本进行排序，根据用户所期待的GC停顿时间指定回收计划，回收一部分Region。
