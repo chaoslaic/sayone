@@ -49,12 +49,14 @@ Java主要分为基础知识和高级特性。
 
 ### Queue
 
-- 抛异常的方法：add、remove、element。
-- 不抛异常的方法：offer、poll、peek。
+- 抛出异常：add、remove、element。
+- 特殊值：offer、poll、peek。
+- 阻塞：put、take。
+- 超时：offer、poll。
 
 ### Map
 
-利用hash值提高比较性能。hash值默认是对象内存地址的计算。若想比较两个对象是否相等，需同时覆盖对象的hashCode方法和equals方法，并且其方法的返回值相同。
+利用hash值提高比较性能，默认是对象内存地址的计算。若想比较两个对象是否相等，需同时覆盖对象的hashCode方法和equals方法，并且其方法的返回值相同。
 
 HashMap扩容的时候链表会倒置顺序，多线程会导致HashMap的Entry链表形成环形数据结构，一旦形成环形数据结构，Entry的next节点永远不为空，就会产生死循环获取Entry。
 
@@ -120,6 +122,8 @@ Collections以静态方法的方式提供了通用功能。
 ## 反射
 
 动态获取（程序运行时）类和对象的信息，动态调用对象的方法。
+
+前15次通过JNI native调用，后面通过AMS新生成的类进行调用。JNI native调用的方式比动态生成类调用的方式慢20倍左右，但第一次动态生成类的过程比较慢。
 
 ### 使用步骤
 
